@@ -16,12 +16,9 @@ public class MyBinaryTree {
 
         n0.left = n1;
         n0.right = n2;
-
         n1.left = n3;
         n1.right = n4;
-
         n2.right = n5;
-
         root = n0;
     }
 }

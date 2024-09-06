@@ -31,6 +31,7 @@ public class MyBST {
                     }
                 }
             }
+
             return root;
         }
     }
@@ -55,5 +56,106 @@ public class MyBST {
         }
 
         return root;
+    }
+
+    public TreeNode findLeftMostNode(TreeNode root) {
+        if (root == null) {
+            return null;
+        }
+        TreeNode leftMostNode = root;
+        while (leftMostNode.left != null) {
+            leftMostNode = leftMostNode.left;
+        }
+
+        return leftMostNode;
+    }
+
+    public TreeNode deleteNode(TreeNode root, int key) {
+        if (root == null) {
+            return null;
+        }
+
+        if (key < root.val) {
+            root.left = deleteNode(root.left, key);
+        } else if (key > root.val) {
+            root.right = deleteNode(root.right, key);
+        } else {
+            if (root.left == null && root.right == null) {
+                return null;
+            }
+            if (root.left != null && root.right == null) {
+                return root.left;
+            }
+            if (root.left == null && root.right != null) {
+                return root.right;
+            }
+
+            TreeNode leftMostNode = findLeftMostNode(root.right);
+            root.val = leftMostNode.val;
+            root.right = deleteNode(root.right, leftMostNode.val);
+        }
+
+        return root;
+    }
+
+    public TreeNode searchBST(TreeNode root, int val) {
+        if (root == null) {
+            return null;
+        }
+
+        if (val < root.val) {
+            return searchBST(root.left, val);
+        } else if (val > root.val) {
+            return searchBST(root.right, val);
+        }
+
+        return root;
+    }
+
+    // Node - Left - Right
+    public static void preOrder(TreeNode currentNode) {
+        if (currentNode == null) {
+            return;
+        }
+        System.out.print(currentNode.val + " ");
+        preOrder(currentNode.left);
+        preOrder(currentNode.right);
+    }
+
+    // Left - Node - Right
+    public static void inOrder(TreeNode currentNode) {
+        if (currentNode == null) {
+            return;
+        }
+
+        preOrder(currentNode.left);
+        System.out.println(currentNode.val);
+        preOrder(currentNode.right);
+    }
+
+    // Left - Right - Node
+    public static void postOrder(TreeNode currentNode) {
+        if (currentNode == null) {
+            return;
+        }
+
+        postOrder(currentNode.left);
+        postOrder(currentNode.right);
+        System.out.println(currentNode.val);
+    }
+
+    public static void main(String[] args) {
+        TreeNode n0 = new TreeNode(0);
+        TreeNode n1 = new TreeNode(1);
+        TreeNode n2 = new TreeNode(2);
+        TreeNode n3 = new TreeNode(3);
+        TreeNode n4 = new TreeNode(4);
+        TreeNode n5 = new TreeNode(5);
+
+        n0.left = n1; n0.right = n2;
+        n1.left = n3; n1.right = n4;
+        n2.right = n5;
+        preOrder(n0);
+        System.out.println("\nDone");
     }
 }

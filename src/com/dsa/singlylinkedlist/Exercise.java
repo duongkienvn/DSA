@@ -1,13 +1,9 @@
 package com.dsa.singlylinkedlist;
 
-import java.math.BigInteger;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Stack;
+import java.util.*;
 
 public class Exercise {
-    public static class ListNode {
+    private static class ListNode {
         int val;
         ListNode next;
 
@@ -678,7 +674,7 @@ public class Exercise {
 
         while (current != null) {
             ListNode part = new ListNode();
-            
+
         }
         return result;
     }
@@ -710,24 +706,540 @@ public class Exercise {
             current.next.next = nextNode;
             current = nextNode;
         }
+    }
+
+    public ListNode mergeKLists(ListNode[] lists) {
+        if (lists == null || lists.length == 0) {
+            return null;
+        }
+
+        PriorityQueue<ListNode> minHeap = new PriorityQueue<>((a, b) -> Integer.compare(a.val, b.val));
+        for (ListNode list : lists) {
+            if (list != null) {
+                minHeap.add(list);
+            }
+        }
+
+        ListNode dummy = new ListNode();
+        ListNode current = dummy;
+
+        while (!minHeap.isEmpty()) {
+            ListNode node = minHeap.poll();
+
+            current.next = node;
+            current = current.next;
+
+            if (node.next != null) {
+                minHeap.add(node.next);
+            }
+        }
+
+        return dummy.next;
+    }
+
+    public ListNode reverseKGroup(ListNode head, int k) {
+        if (head == null || k == 1) {
+            return head;
+        }
+
+        ListNode dummy = new ListNode(0);
+        dummy.next = head;
+        ListNode current = head, previous = dummy, next = dummy;
+
+        int count = 0;
+        while (current != null) {
+            count++;
+            current = current.next;
+        }
+
+        while (count >= k) {
+            current = previous.next;
+            next = current.next;
+            for (int i = 1; i < k; i++) {
+                current.next = next.next;
+                next.next = previous.next;
+                previous.next = next;
+                next = current.next;
+            }
+            count -= k;
+            previous = current;
+        }
+
+        return dummy.next;
+    }
+
+    class LRUCache {
+        class DLinkedNode {
+            int key;
+            int value;
+            DLinkedNode prev;
+            DLinkedNode next;
+        }
+
+        private void addNode(DLinkedNode node) {
+            DLinkedNode nextNode = head.next;
+
+            node.prev = head;
+            node.next = nextNode;
+
+            nextNode.prev = node;
+            head.next = node;
+        }
+
+        private void removeNode(DLinkedNode node) {
+            DLinkedNode prevNode = node.prev;
+            DLinkedNode nextNode = node.next;
+
+            prevNode.next = nextNode;
+            nextNode.prev = prevNode;
+        }
+
+        private void moveToHead(DLinkedNode node) {
+            removeNode(node);
+            addNode(node);
+        }
+
+        private DLinkedNode popTail() {
+            DLinkedNode res = tail.prev;
+            removeNode(res);
+            return res;
+        }
+
+        int size = 0;
+        int capacity;
+        private Map<Integer, DLinkedNode> cache = new HashMap<>();
+        private DLinkedNode head, tail;
+
+        public LRUCache(int capacity) {
+            this.size = 0;
+            this.capacity = capacity;
+
+            head = new DLinkedNode();
+            tail = new DLinkedNode();
+
+            head.next = tail;
+            tail.prev = head;
+        }
+
+        public int get(int key) {
+            DLinkedNode node = cache.get(key);
+            if (node == null) {
+                return -1;
+            }
+
+            moveToHead(node);
+
+            return node.value;
+        }
+
+        public void put(int key, int value) {
+            DLinkedNode node = cache.get(key);
+            if (node == null) {
+                DLinkedNode newNode = new DLinkedNode();
+                newNode.key = key;
+                newNode.value = value;
+
+                cache.put(key, newNode);
+                addNode(newNode);
+                size++;
+                if (size > capacity) {
+                    DLinkedNode tail = popTail();
+                    cache.remove(tail.key);
+                    size--;
+                }
+            } else {
+                node.value = value;
+                moveToHead(node);
+            }
+        }
+    }
+
+    class LFUCache {
+        class Node {
+            int key, value, freq;
+            Node prev;
+            Node next;
+
+            public Node(int key, int value) {
+                this.key = key;
+                this.value = value;
+                this.freq = 1;
+            }
+        }
+
+        class DoublyLinkedList {
+            int size;
+            Node head, tail;
+
+            public DoublyLinkedList() {
+                head = new Node(0, 0);
+                tail = new Node(0, 0);
+                head.next = tail;
+                tail.prev = head;
+                size = 0;
+            }
+
+            public void addNode(Node node) {
+                Node nextNode = head.next;
+                node.next = nextNode;
+                node.prev = head;
+                head.next = node;
+                nextNode.prev = node;
+                size++;
+            }
+
+            public void removeNode(Node node) {
+                Node prevNode = node.prev;
+                Node nextNode = node.next;
+
+                prevNode.next = nextNode;
+                nextNode.prev = prevNode;
+                size--;
+            }
+
+            public Node removeLast() {
+                if (size > 0) {
+                    Node lastNode = tail.prev;
+                    removeNode(lastNode);
+                    return lastNode;
+                }
+                return null;
+            }
+        }
+
+        private int capacity, minFreq;
+        private Map<Integer, Node> keyToNode;
+        private Map<Integer, DoublyLinkedList> freqToDLL;
+
+        public LFUCache(int capacity) {
+            this.capacity = capacity;
+            this.minFreq = 0;
+            keyToNode = new HashMap<>();
+            freqToDLL = new HashMap<>();
+        }
+
+        public int get(int key) {
+            if (!keyToNode.containsKey(key)) {
+                return -1;
+            }
+
+            Node node = keyToNode.get(key);
+            updateNode(node);
+
+            return node.value;
+        }
+
+        public void put(int key, int value) {
+            if (keyToNode.containsKey(key)) {
+                Node node = keyToNode.get(key);
+                node.value = value;
+                updateNode(node);
+            } else {
+                if (keyToNode.size() >= capacity) {
+                    DoublyLinkedList minFreqList = freqToDLL.get(minFreq);
+                    Node nodeToRemove = minFreqList.removeLast();
+                    keyToNode.remove(nodeToRemove.key);
+                }
+
+                Node newNode = new Node(key, value);
+                keyToNode.put(key, newNode);
+                minFreq = 1;
+
+                freqToDLL.computeIfAbsent(1, k -> new DoublyLinkedList()).addNode(newNode);
+            }
+        }
+
+        private void updateNode(Node node) {
+            int freq = node.freq;
+            DoublyLinkedList list = freqToDLL.get(freq);
+            list.removeNode(node);
+
+            if (freq == minFreq && list.size == 0) {
+                minFreq++;
+            }
+
+            node.freq++;
+            freqToDLL.computeIfAbsent(node.freq, k -> new DoublyLinkedList()).addNode(node);
+        }
+    }
+
+    private class TreeNode {
+        int val;
+        TreeNode left;
+        TreeNode right;
+
+        public TreeNode() {
+        }
+
+        public TreeNode(int val) {
+            this.val = val;
+        }
+
+        public TreeNode(int val, TreeNode left, TreeNode right) {
+            this.val = val;
+            this.left = left;
+            this.right = right;
+        }
+    }
+
+    public TreeNode sortedListToBST(ListNode head) {
+        if (head == null) {
+            return null;
+        }
+
+        return null;
+    }
+
+    private int getListSize(ListNode head) {
+        int size = 0;
+        ListNode current = head;
+        while (current != null) {
+            size++;
+            current = current.next;
+        }
+
+        return size;
+    }
+
+    private TreeNode listToBST(int left, int right) {
+        if (left > right) {
+            return null;
+        }
 
 
+        return null;
+    }
+
+    public ListNode partition(ListNode head, int x) {
+        if (head == null) {
+            return null;
+        }
+
+        ListNode dummy = new ListNode();
+        ListNode first = dummy;
+        ListNode temp = new ListNode();
+        ListNode second = temp;
+        ListNode current = head;
+
+        while (current != null) {
+            if (current.val < x) {
+                first.next = new ListNode(current.val);
+                first = first.next;
+            } else {
+                second.next = new ListNode(current.val);
+                second = second.next;
+            }
+            current = current.next;
+        }
+        first.next = temp.next;
+
+        return dummy.next;
+    }
+
+    class Solution {
+        private ListNode head;
+        private Random random;
+
+        public Solution(ListNode head) {
+            this.head = head;
+            random = new Random();
+        }
+
+        public int getRandom() {
+            ListNode current = head;
+            int size = getListSize(head);
+
+            int index = random.nextInt(size);
+            int cnt = 0;
+
+            while (current != null) {
+                if (cnt == index) {
+                    return current.val;
+                }
+                current = current.next;
+                cnt++;
+            }
+
+            return -1;
+        }
+    }
+
+    public ListNode addTwoNumbersII(ListNode l1, ListNode l2) {
+        Stack<ListNode> stack1 = new Stack<>();
+        Stack<ListNode> stack2 = new Stack<>();
+
+        while (l1 != null) {
+            stack1.push(l1);
+            l1 = l1.next;
+        }
+
+        while (l2 != null) {
+            stack2.push(l2);
+            l2 = l2.next;
+        }
+
+        ListNode result = null;
+        int carry = 0;
+        while (!stack1.isEmpty() || !stack2.isEmpty() || carry != 0) {
+            int sum = carry;
+            int num1 = !stack1.isEmpty() ? stack1.pop().val : 0;
+            int num2 = !stack2.isEmpty() ? stack2.pop().val : 0;
+            sum += num1 + num2;
+
+            carry = sum / 10;
+            ListNode newNode = new ListNode(sum % 10);
+            newNode.next = result;
+            result = newNode;
+        }
+
+        return result;
+    }
+
+    class Twitter {
+        private static int timestamp = 0;
+        private Map<Integer, Set<Integer>> followerMap;
+        private Map<Integer, List<Tweet>> tweetsMap;
+
+        class Tweet {
+            int tweetId;
+            int time;
+
+            public Tweet(int tweetId, int time) {
+                this.tweetId = tweetId;
+                this.time = time;
+            }
+        }
+
+        public Twitter() {
+            followerMap = new HashMap<>();
+            tweetsMap = new HashMap<>();
+        }
+
+        public void postTweet(int userId, int tweetId) {
+            if (!tweetsMap.containsKey(userId)) {
+                tweetsMap.put(userId, new ArrayList<>());
+            }
+            tweetsMap.get(userId).add(new Tweet(tweetId, timestamp++));
+        }
+
+        public List<Integer> getNewsFeed(int userId) {
+            Queue<Tweet> maxHeap = new PriorityQueue<>((a, b) -> b.time - a.time);
+
+            if (tweetsMap.containsKey(userId)) {
+                maxHeap.addAll(tweetsMap.get(userId));
+            }
+
+            Set<Integer> followeesId = followerMap.getOrDefault(userId, new HashSet<>());
+            for (int followeeId : followeesId) {
+                if (tweetsMap.containsKey(followeeId)) {
+                    maxHeap.addAll(tweetsMap.get(followeeId));
+                }
+            }
+
+            List<Integer> result = new ArrayList<>();
+            int count = 0;
+            while (!maxHeap.isEmpty() && count < 10) {
+                result.add(maxHeap.poll().tweetId);
+                count++;
+            }
+
+            return result;
+        }
+
+        public void follow(int followerId, int followeeId) {
+            if (followerId == followeeId) {
+                return;
+            }
+//            if (!followerMap.containsKey(followerId)) {
+//                followerMap.put(followerId, new HashSet<>());
+//            }
+//            followerMap.get(followerId).add(followeeId);
+
+            followerMap.computeIfAbsent(followerId, k -> new HashSet<>()).add(followeeId);
+        }
+
+        public void unfollow(int followerId, int followeeId) {
+            if (followerMap.containsKey(followerId)) {
+                followerMap.get(followerId).remove(followeeId);
+            }
+        }
+    }
+
+    public ListNode detectCycle(ListNode head) {
+        ListNode slow = head;
+        ListNode fast = head;
+
+        while (fast != null && fast.next != null) {
+            slow = slow.next;
+            fast = fast.next.next;
+
+            if (fast == slow) {
+                break;
+            }
+        }
+
+        if (fast == null || fast.next == null) {
+            return null;
+        }
+
+        slow = head;
+        while (slow != fast) {
+            slow = slow.next;
+            fast = fast.next;
+        }
+
+        return slow;
+    }
+
+    public ListNode modifiedList(int[] nums, ListNode head) {
+        int length = nums.length;
+        ListNode dummy = new ListNode();
+        ListNode current = dummy;
+
+        Set<Integer> set = new HashSet<>();
+        for (int num : nums) {
+            set.add(num);
+        }
+
+        while (head != null) {
+            while (set.contains(head.val)) {
+                head = head.next;
+                if (head == null) {
+                    break;
+                }
+            }
+
+            current.next = head;
+            current = current.next;
+            if (head != null) {
+                head = head.next;
+            }
+        }
+
+        return dummy.next;
     }
 
     public static void main(String[] args) {
-        ListNode l1 = new ListNode(1);
-        ListNode l2 = new ListNode(2);
-        ListNode l3 = new ListNode(3);
-        ListNode l4 = new ListNode(4);
+//        ListNode l1 = new ListNode(1);
+//        ListNode l2 = new ListNode(2);
+//        ListNode l3 = new ListNode(3);
+//        ListNode l4 = new ListNode(4);
+//
+//        l1.next = l2;
+//        l2.next = l3;
+//        l3.next = l4;
+//        printListNode(l1);
+//
+//        Exercise exercise = new Exercise();
+//        exercise.reorderList(l1);
+//        printListNode(l1);
 
-        l1.next = l2;
-        l2.next = l3;
-        l3.next = l4;
-        printListNode(l1);
 
-        Exercise exercise = new Exercise();
-        exercise.reorderList(l1);
-        printListNode(l1);
-
+        Queue<Integer> queue = new LinkedList<>();
+        queue.add(4);
+        queue.add(5);
+        queue.add(9);
+        queue.remove(5);
+        System.out.println(queue);
     }
 }
