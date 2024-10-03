@@ -1219,6 +1219,29 @@ public class Exercise {
         return dummy.next;
     }
 
+    public int gcd(int a, int b) {
+        if (b == 0) return a;
+        return gcd(b, a % b);
+    }
+
+    public ListNode insertGreatestCommonDivisors(ListNode head) {
+        if (head == null) {
+            return null;
+        }
+
+        ListNode current = head;
+        while (current.next != null) {
+            ListNode nextNode = current.next;
+            int gcd = gcd(current.val, nextNode.val);
+            ListNode newNode = new ListNode(gcd);
+            current.next = newNode;
+            newNode.next = nextNode;
+            current = current.next.next;
+        }
+
+        return head;
+    }
+
     public static void main(String[] args) {
 //        ListNode l1 = new ListNode(1);
 //        ListNode l2 = new ListNode(2);
