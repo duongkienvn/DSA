@@ -102,7 +102,7 @@ public class ExerciseOne {
             Right[i] = arr[mid + 1 + i];
         }
 
-        int i = 0, j = 0, k = 0;
+        int i = 0, j = 0;
         while (i < n1 && j < n2) {
             comparisonCount++;
             if (Left[i] <= Right[j]) {
